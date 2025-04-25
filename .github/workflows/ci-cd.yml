@@ -25,11 +25,14 @@ jobs:
       - name: Install dependencies
         run: |
           cd docker-test && pip install .[test]
-          pip install pytest httpx
+          
+      - name: Install package in dev mode
+        run: |
+          cd docker-test && pip install -e .
           
       - name: Run tests
         run: |
-          cd docker-test/tests && pytest -v
+          cd docker-test && pytest -v tests/
 
   build-and-push:
     needs: test
