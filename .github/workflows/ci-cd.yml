@@ -32,7 +32,8 @@ jobs:
           
       - name: Run tests
         run: |
-          cd docker-test && pytest -v tests/
+          cd docker-test && \
+          PYTHONPATH=$PYTHONPATH:. pytest -v tests/
 
   build-and-push:
     needs: test
