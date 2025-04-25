@@ -24,12 +24,12 @@ jobs:
           
       - name: Install dependencies
         run: |
-          pip install -r docker/app/requirements.txt
+          pip install .[test]
           pip install pytest httpx
           
       - name: Run tests
         run: |
-          cd docker/app && pytest -v
+          cd docker-test/tests && pytest -v
 
   build-and-push:
     needs: test
