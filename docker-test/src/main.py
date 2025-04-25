@@ -20,6 +20,8 @@ async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_d
     await db.refresh(user)
     return user
 
+##
+
 
 @app.get("/users/", response_model=list[schemas.User])
 async def read_users(skip: int = 0, limit: int = 10, db: AsyncSession = Depends(get_db)):
