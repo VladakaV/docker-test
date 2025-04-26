@@ -52,13 +52,13 @@ jobs:
 
       - name: Debug Python path
         run: |
-          echo $PYTHONPATH
+          echo "PYTHONPATH: $PYTHONPATH"
+          echo "Current directory: $(pwd)"
           ls -la
-          
+
       - name: Run tests
         run: |
-          cd docker-test/tests
-          PYTHONPATH=../src pytest -v
+          PYTHONPATH=$(pwd) pytest -v tests/
 
   deploy:
     needs: test   # 👉 теперь деплой зависит от тестов
