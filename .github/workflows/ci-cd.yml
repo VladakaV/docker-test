@@ -49,6 +49,11 @@ jobs:
           cd docker-test
           pip install .[test]
           pip install pytest httpx
+          -
+      - name: Debug Python path
+        run: |
+          echo $PYTHONPATH
+          ls -la
           
       - name: Run tests
         run: |
