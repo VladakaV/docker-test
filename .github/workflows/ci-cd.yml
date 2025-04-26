@@ -81,8 +81,9 @@ jobs:
 #        with:
 #          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Save SSH key
+        shell: cmd
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > id_rsa
+          echo ${{ secrets.SSH_PRIVATE_KEY }} > id_rsa
 
       - name: Deploy to server
         run: |
