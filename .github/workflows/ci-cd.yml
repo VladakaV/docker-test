@@ -7,12 +7,34 @@ on:
     branches: [ "master" ]
 
 env:
-  DOCKER_IMAGE: ghcr.io/vladaka/docker-test  # GitHub Container Registry
+  DOCKER_IMAGE: ghcr.io/vladakav/docker-test
   APP_PORT: 60080
-  CONTAINER_PORT: 8049  # Ваш внутренний порт
+  CONTAINER_PORT: 8049
 
 jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: ./docker-test
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+
   test:
+    needs: build-and-push   # 👉 теперь тест зависит от сборки
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,30 +53,8 @@ jobs:
         run: |
           cd docker-test/tests && pytest -v
 
-  build-and-push:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker
-          push: true
-          tags: |
-            ${{ env.DOCKER_IMAGE }}:latest
-            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-
   deploy:
-    needs: build-and-push
+    needs: test   # 👉 теперь деплой зависит от тестов
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
