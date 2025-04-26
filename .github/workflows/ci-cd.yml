@@ -88,6 +88,10 @@ env:
   APP_PORT: 60080
   CONTAINER_PORT: 8049  # Ваш внутренний порт
 
+permissions:
+      contents: read
+      packages: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
