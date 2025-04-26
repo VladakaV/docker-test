@@ -57,8 +57,8 @@ jobs:
           
       - name: Run tests
         run: |
-          cd docker-test/tests
-          PYTHONPATH=${{ github.workspace }}/docker-test/src pytest -v
+          PYTHONPATH=docker-test/src 
+          cd docker-test/tests && pytest -v
 
   deploy:
     needs: test   # 👉 теперь деплой зависит от тестов
