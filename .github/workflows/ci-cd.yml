@@ -84,7 +84,7 @@ on:
     branches: [ "master" ]
 
 env:
-  DOCKER_IMAGE: ghcr.io/VladakaV/docker-test  # GitHub Container Registry
+  DOCKER_IMAGE: ghcr.io/vladakav/docker-test  # GitHub Container Registry
   APP_PORT: 60080
   CONTAINER_PORT: 8049  # Ваш внутренний порт
 
