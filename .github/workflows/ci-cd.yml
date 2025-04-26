@@ -75,6 +75,11 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
       
 #      - name: Add SSH key
 #        uses: webfactory/ssh-agent@v0.7.0
@@ -91,5 +96,9 @@ jobs:
 #          "
       - name: Deploy to server
         run: |
-          ssh dirac@kubsu.tyvik.ru -p58529
-          43b04c90
+          sshpass -p "${{ secrets.SERVER_PASSWORD }}" ssh dirac@kubsu.tyvik.ru -p58529 " 
+            docker pull ${{ env.DOCKER_IMAGE }}:latest &&
+            docker stop app || true &&
+            docker rm app || true &&
+            docker run -d --name app -p ${{ env.APP_PORT }}:${{ env.CONTAINER_PORT }} ${{ env.DOCKER_IMAGE }}:latest
+          "
