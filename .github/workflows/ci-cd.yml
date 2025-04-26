@@ -36,6 +36,15 @@ jobs:
   test:
     needs: build-and-push   # 👉 теперь тест зависит от сборки
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres
+        env:
+          POSTGRES_USER: kubsu
+          POSTGRES_PASSWORD: kubsu
+          POSTGRES_DB: kubsu
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       
