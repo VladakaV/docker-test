@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 env:
-  DOCKER_IMAGE: ghcr.io/vladaka/docker-test
+  DOCKER_IMAGE: ghcr.io/vladakav/docker-test
   APP_PORT: 60080
   CONTAINER_PORT: 8049
 
