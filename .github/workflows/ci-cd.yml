@@ -1,3 +1,80 @@
+# name: Docker CI/CD
+
+# on:
+#   push:
+#     branches: [ "master" ]
+#   pull_request:
+#     branches: [ "master" ]
+
+# env:
+#   DOCKER_IMAGE: ghcr.io/vladaka/docker-test  # GitHub Container Registry
+#   APP_PORT: 60080
+#   CONTAINER_PORT: 8049  # Ваш внутренний порт
+
+# jobs:
+
+#   build-and-push:
+#     needs: test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+      
+#       - name: Log in to GitHub Container Registry
+#         uses: docker/login-action@v2
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
+      
+#       - name: Build and push
+#         uses: docker/build-push-action@v4
+#         with:
+#           context: ./docker
+#           push: true
+#           tags: |
+#             ${{ env.DOCKER_IMAGE }}:latest
+#             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
+
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+      
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: "3.10"
+          
+#       - name: Install dependencies
+#         run: |
+#           cd docker-test && pip install .[test]
+          
+#       - name: Install package in dev mode
+#         run: |
+#           cd docker-test && pip install -e .
+          
+#       - name: Run tests
+#         run: |
+#           cd docker-test && \
+#           PYTHONPATH=$PYTHONPATH:. pytest -v tests/
+
+#   deploy:
+#     needs: build-and-push
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+      
+#       - name: Add SSH key
+#         uses: webfactory/ssh-agent@v0.7.0
+#         with:
+#           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+#       - name: Deploy to server
+#         run: |
+#           ssh -o StrictHostKeyChecking=no -p 58529 dirac@kubsu.tyvik.ru "
+#             docker pull ${{ env.DOCKER_IMAGE }}:latest &&
+#             docker stop app || true &&
+
 name: Docker CI/CD
 
 on:
@@ -12,9 +89,7 @@ env:
   CONTAINER_PORT: 8049  # Ваш внутренний порт
 
 jobs:
-
   build-and-push:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +111,7 @@ jobs:
             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
 
   test:
+    needs: build-and-push  # Теперь тесты зависят от успешной сборки
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +135,7 @@ jobs:
           PYTHONPATH=$PYTHONPATH:. pytest -v tests/
 
   deploy:
-    needs: build-and-push
+    needs: test  # Деплой теперь зависит от успешного прохождения тестов
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,3 +153,6 @@ jobs:
             docker rm app || true &&
             docker run -d --name app -p ${{ env.APP_PORT }}:${{ env.CONTAINER_PORT }} ${{ env.DOCKER_IMAGE }}:latest
           "
+#             docker rm app || true &&
+#             docker run -d --name app -p ${{ env.APP_PORT }}:${{ env.CONTAINER_PORT }} ${{ env.DOCKER_IMAGE }}:latest
+#           "
