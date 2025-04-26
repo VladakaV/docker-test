@@ -21,7 +21,7 @@ async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_d
     return user
 
 ##
-###
+##
 
 
 @app.get("/users/", response_model=list[schemas.User])
