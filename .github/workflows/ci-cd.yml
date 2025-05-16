@@ -7,34 +7,33 @@ on:
     branches: [ "master" ]
 
 env:
-  DOCKER_IMAGE: ghcr.io/vladakav/docker-test
+  DOCKER_IMAGE: ghcr.io/vladaka/docker-test  # GitHub Container Registry
   APP_PORT: 60080
-  CONTAINER_PORT: 8049
+  CONTAINER_PORT: 8049  # Ваш внутренний порт
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker-test
-          push: true
-          tags: |
-            ${{ env.DOCKER_IMAGE }}:latest
-            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        
+        - name: Log in to GitHub Container Registry
+          uses: docker/login-action@v2
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+        
+        - name: Build and push
+          uses: docker/build-push-action@v4
+          with:
+            context: .
+            push: true
+            tags: |
+              ${{ env.DOCKER_IMAGE }}:latest
+              ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
   test:
-    needs: build-and-push   # 👉 теперь тест зависит от сборки
+    needs: build-and-push
     runs-on: ubuntu-latest
     services:
       db:
@@ -55,8 +54,8 @@ jobs:
           
       - name: Install dependencies
         run: |
-          cd docker-test
-          pip install .[test]
+          cd .
+          pip install .[test] 
           pip install pytest httpx
 
       - name: Debug Python path
@@ -64,10 +63,10 @@ jobs:
           echo "PYTHONPATH: $PYTHONPATH"
           echo "Current directory: $(pwd)"
           ls -la
-
+          
       - name: Run tests
         run: |
-          cd docker-test
+          cd .
           PYTHONPATH=$(pwd) pytest -v tests
 
   deploy:
@@ -75,25 +74,42 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-
-      - name: Save SSH key
-        shell: cmd
+      
+      - name: Setup SSH key
+        shell: powershell
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE }}
         run: |
-          echo ${{ secrets.PRIVATE_KEY }} > id_rsa
-
-      - name: Fix SSH key permissions
-        shell: cmd
-        run: |
-          icacls id_rsa /inheritance:r
-          icacls id_rsa /grant:r "%USERNAME%:R"
+          $keyPath = "$env:USERPROFILE\.ssh\kub_key"
+          [System.IO.File]::WriteAllText($keyPath, $env:SSH_KEY)
+        
+          $acl = Get-Acl $keyPath
+          $acl.SetAccessRuleProtection($true, $false)
+          $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) }
+          $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+            "$env:USERNAME", "FullControl", "Allow"
+          )
+          $acl.AddAccessRule($rule)
+          Set-Acl $keyPath $acl
+        
+          icacls $keyPath
 
       - name: Deploy to server
-        shell: cmd
+        shell: powershell
         run: |
-          ssh -i id_rsa -o StrictHostKeyChecking=no -p 58529 dirac@kubsu.tyvik.ru ^
-          "docker pull %DOCKER_IMAGE%:latest && ^
-          (docker stop app || exit 0) && ^
-          (docker rm app || exit 0) && ^
-          docker run -d --name app -p %APP_PORT%:%CONTAINER_PORT% %DOCKER_IMAGE%:latest"
+          $image = "${{ env.DOCKER_IMAGE }}"
+          $appPort = "${{ env.APP_PORT }}"
+          $containerPort = "${{ env.CONTAINER_PORT }}"
+          $token = "${{ secrets.GITHUB_TOKEN }}"
+    
+          $commands = @"
+          podman login ghcr.io -u ${{ github.actor }} -p $token
+          podman pull ${image}:latest
+          podman stop app  echo "No container to stop"
+          podman rm app  echo "No container to remove"
+          podman run -d --name app --net=host ${image}:latest 
+          "@
+    
 
-  
+          
+          ssh -v -i "$env:USERPROFILE\.ssh\kub_key" -o StrictHostKeyChecking=no -p 58529 dirac@kubsu.tyvik.ru $commands
