@@ -78,24 +78,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup SSH key
-        shell: powershell
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Save SSH key
+        shell: pwsh
         run: |
           $keyPath = "$env:USERPROFILE\.ssh\kub_key"
-          [System.IO.File]::WriteAllText($keyPath, $env:SSH_KEY)
-        
-          $acl = Get-Acl $keyPath
-          $acl.SetAccessRuleProtection($true, $false)
-          $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) }
-          $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
-            "$env:USERNAME", "FullControl", "Allow"
-          )
-          $acl.AddAccessRule($rule)
-          Set-Acl $keyPath $acl
-        
-          icacls $keyPath
+          New-Item -ItemType Directory -Force -Path (Split-Path $keyPath)
+          $sshKey = $env:SSH_PRIVATE_KEY
+          # Запишем ключ в файл, сохраняя переносы строк
+          Set-Content -Path $keyPath -Value $sshKey
+          # Установим права
+          icacls $keyPath /inheritance:r
+          icacls $keyPath /grant:r "$($env:USERNAME):(R)"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy to server
         shell: powershell
