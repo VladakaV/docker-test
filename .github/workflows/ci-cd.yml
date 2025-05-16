@@ -81,7 +81,7 @@ jobs:
       - name: Setup SSH key
         shell: powershell
         env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           $keyPath = "$env:USERPROFILE\.ssh\kub_key"
           [System.IO.File]::WriteAllText($keyPath, $env:SSH_KEY)
