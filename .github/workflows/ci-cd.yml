@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 env:
-  DOCKER_IMAGE: ghcr.io/vladakav/docker-test  # GitHub Container Registry
+  DOCKER_IMAGE: ghcr.io/vladakav/docker-test  
   APP_PORT: 60080
   CONTAINER_PORT: 8049  
 
