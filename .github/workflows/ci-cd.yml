@@ -105,7 +105,6 @@ jobs:
           podman rm app || echo "No container to remove"
           podman run -d --name app --net=host ${image}:latest 
           "@
-    
-
+  
           
           ssh -v -i "$env:USERPROFILE\.ssh\kub_key" -o StrictHostKeyChecking=no -p 58529 dirac@kubsu.tyvik.ru $commands
