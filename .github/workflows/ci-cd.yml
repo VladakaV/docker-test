@@ -101,8 +101,8 @@ jobs:
           $commands = @"
           podman login ghcr.io -u ${{ github.actor }} -p $token
           podman pull ${image}:latest
-          podman stop app  echo "No container to stop"
-          podman rm app  echo "No container to remove"
+          podman stop app || echo "No container to stop"
+          podman rm app || echo "No container to remove"
           podman run -d --name app --net=host ${image}:latest 
           "@
     
