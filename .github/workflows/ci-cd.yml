@@ -79,14 +79,12 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Save SSH key
-        shell: pwsh
+        shell: powershell
         run: |
           $keyPath = "$env:USERPROFILE\.ssh\kub_key"
           New-Item -ItemType Directory -Force -Path (Split-Path $keyPath)
           $sshKey = $env:SSH_PRIVATE_KEY
-          # Запишем ключ в файл, сохраняя переносы строк
           Set-Content -Path $keyPath -Value $sshKey
-          # Установим права
           icacls $keyPath /inheritance:r
           icacls $keyPath /grant:r "$($env:USERNAME):(R)"
         env:
