@@ -57,7 +57,7 @@ jobs:
           
       - name: Install dependencies
         run: |
-          cd .
+          cd ./docker-test
           pip install .[test] 
           pip install pytest httpx
 
